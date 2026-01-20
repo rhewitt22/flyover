@@ -1,0 +1,1 @@
+{"mappings":"AAAA,oCAAoC;AACpC,MAAM,sBAAsB","sources":["config.js"],"sourcesContent":["// Add your Mapbox access token here\nconst MAPBOX_ACCESS_TOKEN = 'pk.eyJ1Ijoicmhld2l0dCIsImEiOiJjbWtsbDJrbWIwNmd1M2NwenZscGxqMXY1In0.KuDCke4gc_rJJym766SvYw';\n"],"names":[],"version":3,"file":"roy.2cd50cb1.js.map","sourceRoot":"/__parcel_source_root/"}

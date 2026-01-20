@@ -3,6 +3,7 @@ const path = require('path');
 const { getRoadsByCCCode, getTrailsByManagingOrg } = require('./fwsClient');
 
 const refugesToProcess = [
+    { name: 'Bosque del Apache National Wildlife Refuge', cccode: 'FF02RNBO00' },
     { name: 'Merritt Island National Wildlife Refuge', cccode: '41570' },
     { name: 'Tamarac National Wildlife Refuge', cccode: 'FF03RTMC00' },
     { name: 'Santee National Wildlife Refuge', cccode: 'FF04RSST00' },
@@ -71,7 +72,7 @@ async function processRefuge(refugeInfo) {
             for (const coord of coordinates) {
                 const lon = coord[0];
                 const lat = coord[1];
-                const alt = 1500; // Default altitude
+                const alt = 300; // Default altitude
 
                 csvLines.push(`${cleanPathName},${lon},${lat},${alt},${timestamp}`);
                 timestamp++;
@@ -101,6 +102,7 @@ async function processRefuge(refugeInfo) {
         return {
             id: refugeId,
             name: refugeInfo.name.replace('National Wildlife Refuge', 'NWR').replace('Wildlife Refuge', 'NWR').replace('Refuge', 'NWR'),
+            cccode: refugeInfo.cccode,
             file: `data/${fileName}`,
             center: [parseFloat(centerLon.toFixed(4)), parseFloat(centerLat.toFixed(4))],
             zoom: 11 // Default zoom

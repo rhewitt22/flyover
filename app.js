@@ -1,14 +1,52 @@
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import refugesData from './data/refuges.json';
+// Import all CSV files as URLs. Parcel glob import returns an object where keys are filenames.
+// Note: Parcel 2 glob imports might require a specific plugin or syntax depending on version,
+// but usually `import * as x` works or we use `new URL` dynamically.
+// Let's use a simpler approach: Map the IDs to require/import statements if glob isn't set up.
+// Actually, since we have a fixed list in refuges.json, we can rely on the static file copy we just set up.
+// But the user said static file copy FAILED.
+// So we MUST let Parcel handle the URL generation.
+
+// Since glob imports can be tricky without config, let's just use the `new URL` syntax for the file path.
+// But `new URL` needs a static base. 
+// `new URL('./data/' + filename, import.meta.url)` often works in Parcel for dynamic paths if they are statically analyzable enough.
+// But the filenames come from the JSON.
+
+// Workaround: We will manually map the IDs to the `new URL` for each known file.
+// This is tedious but 100% reliable without complex glob configs.
+
+const csvUrls = {
+  'data/bosque_del_apache.csv': new URL('data/bosque_del_apache.csv', import.meta.url).href,
+  'data/quivira.csv': new URL('data/quivira.csv', import.meta.url).href,
+  'data/tamarac.csv': new URL('data/tamarac.csv', import.meta.url).href,
+  'data/santee.csv': new URL('data/santee.csv', import.meta.url).href,
+  'data/des_lacs.csv': new URL('data/des_lacs.csv', import.meta.url).href,
+  'data/national_elk.csv': new URL('data/national_elk.csv', import.meta.url).href,
+  'data/ridgefield.csv': new URL('data/ridgefield.csv', import.meta.url).href,
+  'data/wichita_mountains.csv': new URL('data/wichita_mountains.csv', import.meta.url).href,
+  'data/kenai.csv': new URL('data/kenai.csv', import.meta.url).href,
+  'data/bombay_hook.csv': new URL('data/bombay_hook.csv', import.meta.url).href,
+  'data/rocky_mountain_arsenal.csv': new URL('data/rocky_mountain_arsenal.csv', import.meta.url).href,
+  'data/j_n_ding_darling.csv': new URL('data/j_n_ding_darling.csv', import.meta.url).href,
+  'data/lower_klamath.csv': new URL('data/lower_klamath.csv', import.meta.url).href,
+  'data/tule_lake.csv': new URL('data/tule_lake.csv', import.meta.url).href,
+  'data/merritt_island.csv': new URL('data/merritt_island.csv', import.meta.url).href,
+};
+
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
 const map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/satellite-v9',
+    style: 'mapbox://styles/mapbox/satellite-streets-v12',
     center: [-98.5795, 39.8283],
     zoom: 3
 });
 
 const refugeSelector = document.getElementById('refuge-selector');
 const pathSelector = document.getElementById('path-selector');
+const styleSelector = document.getElementById('style-selector');
 const progressBar = document.getElementById('progress-bar');
 const rewindButton = document.getElementById('rewind-button');
 const playPauseButton = document.getElementById('play-pause-button');
@@ -24,12 +62,13 @@ let marker;
 let playbackDirection = 1;
 
 async function loadRefugesData() {
-    const response = await fetch('data/refuges.json');
-    return await response.json();
+    return refugesData;
 }
 
 async function loadFlyoverData(dataFile) {
-    const response = await fetch(dataFile);
+    // Resolve the correct URL using our map
+    const url = csvUrls[dataFile] || dataFile;
+    const response = await fetch(url);
     const csvData = await response.text();
     const lines = csvData.split('\n').slice(1);
     const parsedData = {};
@@ -43,7 +82,7 @@ async function loadFlyoverData(dataFile) {
             parsedData[path_name].push({
                 longitude: parseFloat(longitude),
                 latitude: parseFloat(latitude),
-                altitude: parseFloat(altitude) || 1000, // Default altitude if missing
+                altitude: parseFloat(altitude) || 300, // Default altitude if missing
                 timestamp: parseInt(timestamp) || 0
             });
         }
@@ -152,7 +191,7 @@ function animate() {
 }
 
 // Remove the old moveend listener as it conflicts with the new loop
-// map.on('moveend', ...); 
+// map.on('moveend', ...);
 
 
 function startAnimation() {
@@ -215,7 +254,13 @@ progressBar.addEventListener('input', () => {
 });
 
 pathSelector.addEventListener('change', () => {
-    loadPath(pathSelector.value);
+    const selectedPath = pathSelector.value;
+    loadPath(selectedPath);
+    
+    // Update URL
+    const url = new URL(window.location);
+    url.searchParams.set('flyover', selectedPath);
+    window.history.pushState({}, '', url);
 });
 
 refugeSelector.addEventListener('change', () => {
@@ -239,7 +284,7 @@ function loadPath(pathName) {
         map.flyTo({
             center: [point.longitude, point.latitude],
             altitude: point.altitude,
-            zoom: 15,
+            zoom: 18,
             pitch: 50,
             bearing: 90,
         });
@@ -249,10 +294,15 @@ function loadPath(pathName) {
     }
 }
 
-async function loadRefuge(refuge) {
+async function loadRefuge(refuge, initialPath = null) {
     // Update URL param without reloading
     const url = new URL(window.location);
     url.searchParams.set('refuge', refuge.id);
+    if (initialPath) {
+        url.searchParams.set('flyover', initialPath);
+    } else {
+        url.searchParams.delete('flyover');
+    }
     window.history.pushState({}, '', url);
 
     // Load data
@@ -268,15 +318,77 @@ async function loadRefuge(refuge) {
         pathSelector.appendChild(option);
     }
 
-    // Set initial map view for the refuge
-    // Note: We don't flyTo here because selecting a path will do it.
-    // However, if we just want to show the refuge generally first:
-    // map.flyTo({ center: refuge.center, zoom: refuge.zoom });
+    // Determine which path to load
+    let pathTimestampToLoad = pathNames[0];
+    if (initialPath && pathNames.includes(initialPath)) {
+        pathTimestampToLoad = initialPath;
+    }
     
-    // Select first path
-    if (pathNames.length > 0) {
-        pathSelector.value = pathNames[0];
-        loadPath(pathNames[0]);
+    // Select path
+    if (pathTimestampToLoad) {
+        pathSelector.value = pathTimestampToLoad;
+        loadPath(pathTimestampToLoad);
+    }
+
+    // Load facilities points
+    if (refuge.cccode) {
+        loadFacilities(refuge.cccode);
+    }
+}
+
+async function loadFacilities(cccode) {
+    const sourceId = 'facilities-source';
+    const circleLayerId = 'facilities-points-circle';
+    const labelLayerId = 'facilities-points-label';
+
+    // Clean up existing layer/source
+    if (map.getLayer(labelLayerId)) map.removeLayer(labelLayerId);
+    if (map.getLayer(circleLayerId)) map.removeLayer(circleLayerId);
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
+
+    try {
+        const url = `https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/services/FWS_HQ_Fac_Property_Pt_PublicView/FeatureServer/0/query?where=CCCODE='${cccode}'&f=pgeojson&outFields=*`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        map.addSource(sourceId, {
+            type: 'geojson',
+            data: data
+        });
+
+        // Add a circle layer for the point itself
+        map.addLayer({
+            id: circleLayerId,
+            type: 'circle',
+            source: sourceId,
+            paint: {
+                'circle-radius': 6,
+                'circle-color': '#ffeb3b', // Bright yellow
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#000000'
+            }
+        });
+
+        // Add a symbol layer for the text label
+        map.addLayer({
+            id: labelLayerId,
+            type: 'symbol',
+            source: sourceId,
+            layout: {
+                'text-field': ['get', 'Prop_Name'],
+                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                'text-size': 12,
+                'text-offset': [0, 1.25],
+                'text-anchor': 'top'
+            },
+            paint: {
+                'text-color': '#ffffff',
+                'text-halo-color': '#000000',
+                'text-halo-width': 2
+            }
+        });
+    } catch (e) {
+        console.error('Error loading facilities:', e);
     }
 }
 
@@ -303,9 +415,10 @@ async function initialize() {
         .setLngLat([0, 0])
         .addTo(map);
 
-    // Determine initial refuge
+    // Determine initial refuge and flyover path
     const urlParams = new URLSearchParams(window.location.search);
     const refugeParam = urlParams.get('refuge');
+    const flyoverParam = urlParams.get('flyover');
     
     let initialRefuge;
     if (refugeParam) {
@@ -320,8 +433,12 @@ async function initialize() {
 
     if (initialRefuge) {
         refugeSelector.value = initialRefuge.id;
-        loadRefuge(initialRefuge);
+        loadRefuge(initialRefuge, flyoverParam);
     }
 }
 
 initialize();
+
+styleSelector.addEventListener('change', () => {
+    map.setStyle(styleSelector.value);
+});

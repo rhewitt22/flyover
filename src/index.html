@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refuge Flyover</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <div class="select-wrapper">
+            <select id="refuge-selector" aria-label="Select National Wildlife Refuge"></select>
+        </div>
+        <div class="select-wrapper">
+            <select id="path-selector" aria-label="Select flyover path"></select>
+        </div>
+        <div class="select-wrapper">
+            <select id="style-selector" aria-label="Select map style">
+                <option value="mapbox://styles/mapbox/satellite-streets-v12" selected>Satellite Streets</option>
+                <option value="mapbox://styles/mapbox/satellite-v9">Satellite Only</option>
+                <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
+            </select>
+        </div>
+        
+        <div class="button-container">
+            <button id="rewind-button" title="Rewind" aria-label="Rewind flyover">
+                <svg viewBox="0 0 24 24">
+                    <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
+                </svg>
+            </button>
+            <button id="play-pause-button" title="Play/Pause" aria-label="Play flyover">
+                <svg class="play-icon" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg class="pause-icon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+            </button>
+            <button id="fast-forward-button" title="Fast Forward" aria-label="Fast forward flyover">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="progress-container">
+            <input type="range" id="progress-bar" min="0" max="100" value="0" aria-label="Flyover progress">
+        </div>
+    </div>
+    <script src="config.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

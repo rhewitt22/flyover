@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { getRoadsByCCCode, getTrailsByManagingOrg } = require('./fwsClient');
+const { getRoadsByCCCode, getTrailsByManagingOrg } = require('./src/fwsClient');
 
 const refugesToProcess = [
     { name: 'Bosque del Apache National Wildlife Refuge', cccode: 'FF02RNBO00' },
@@ -31,7 +31,7 @@ function generateId(name) {
 
 async function processRefuge(refugeInfo) {
     console.log(`Processing ${refugeInfo.name} (${refugeInfo.cccode})...`);
-    
+
     try {
         let data;
         // Basic check: if code starts with FF, it's a CCCODE for roads. 
@@ -41,7 +41,7 @@ async function processRefuge(refugeInfo) {
         } else {
             data = await getTrailsByManagingOrg(refugeInfo.cccode);
         }
-        
+
         if (!data || !data.features || data.features.length === 0) {
             console.warn(`  No data found for ${refugeInfo.name}.`);
             return null;
@@ -84,13 +84,13 @@ async function processRefuge(refugeInfo) {
         }
 
         if (totalPoints === 0) {
-             console.warn(`  No coordinates found for ${refugeInfo.name}.`);
-             return null;
+            console.warn(`  No coordinates found for ${refugeInfo.name}.`);
+            return null;
         }
 
         const refugeId = generateId(refugeInfo.name);
         const fileName = `${refugeId}.csv`;
-        const filePath = path.join(__dirname, 'data', fileName);
+        const filePath = path.join(__dirname, 'src', 'data', fileName);
 
         fs.writeFileSync(filePath, csvLines.join('\n'));
         console.log(`  Saved ${filePath}`);
@@ -115,7 +115,7 @@ async function processRefuge(refugeInfo) {
 }
 
 async function main() {
-    const refugesFile = path.join(__dirname, 'data', 'refuges.json');
+    const refugesFile = path.join(__dirname, 'src', 'data', 'refuges.json');
     let existingRefuges = [];
     try {
         existingRefuges = JSON.parse(fs.readFileSync(refugesFile, 'utf8'));

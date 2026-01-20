@@ -18,21 +18,21 @@ import refugesData from './data/refuges.json';
 // This is tedious but 100% reliable without complex glob configs.
 
 const csvUrls = {
-  'data/bosque_del_apache.csv': new URL('data/bosque_del_apache.csv', import.meta.url).href,
-  'data/quivira.csv': new URL('data/quivira.csv', import.meta.url).href,
-  'data/tamarac.csv': new URL('data/tamarac.csv', import.meta.url).href,
-  'data/santee.csv': new URL('data/santee.csv', import.meta.url).href,
-  'data/des_lacs.csv': new URL('data/des_lacs.csv', import.meta.url).href,
-  'data/national_elk.csv': new URL('data/national_elk.csv', import.meta.url).href,
-  'data/ridgefield.csv': new URL('data/ridgefield.csv', import.meta.url).href,
-  'data/wichita_mountains.csv': new URL('data/wichita_mountains.csv', import.meta.url).href,
-  'data/kenai.csv': new URL('data/kenai.csv', import.meta.url).href,
-  'data/bombay_hook.csv': new URL('data/bombay_hook.csv', import.meta.url).href,
-  'data/rocky_mountain_arsenal.csv': new URL('data/rocky_mountain_arsenal.csv', import.meta.url).href,
-  'data/j_n_ding_darling.csv': new URL('data/j_n_ding_darling.csv', import.meta.url).href,
-  'data/lower_klamath.csv': new URL('data/lower_klamath.csv', import.meta.url).href,
-  'data/tule_lake.csv': new URL('data/tule_lake.csv', import.meta.url).href,
-  'data/merritt_island.csv': new URL('data/merritt_island.csv', import.meta.url).href,
+    'data/bosque_del_apache.csv': new URL('data/bosque_del_apache.csv', import.meta.url).href,
+    'data/quivira.csv': new URL('data/quivira.csv', import.meta.url).href,
+    'data/tamarac.csv': new URL('data/tamarac.csv', import.meta.url).href,
+    'data/santee.csv': new URL('data/santee.csv', import.meta.url).href,
+    'data/des_lacs.csv': new URL('data/des_lacs.csv', import.meta.url).href,
+    'data/national_elk.csv': new URL('data/national_elk.csv', import.meta.url).href,
+    'data/ridgefield.csv': new URL('data/ridgefield.csv', import.meta.url).href,
+    'data/wichita_mountains.csv': new URL('data/wichita_mountains.csv', import.meta.url).href,
+    'data/kenai.csv': new URL('data/kenai.csv', import.meta.url).href,
+    'data/bombay_hook.csv': new URL('data/bombay_hook.csv', import.meta.url).href,
+    'data/rocky_mountain_arsenal.csv': new URL('data/rocky_mountain_arsenal.csv', import.meta.url).href,
+    'data/j_n_ding_darling.csv': new URL('data/j_n_ding_darling.csv', import.meta.url).href,
+    'data/lower_klamath.csv': new URL('data/lower_klamath.csv', import.meta.url).href,
+    'data/tule_lake.csv': new URL('data/tule_lake.csv', import.meta.url).href,
+    'data/merritt_island.csv': new URL('data/merritt_island.csv', import.meta.url).href,
 };
 
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
@@ -51,6 +51,14 @@ const progressBar = document.getElementById('progress-bar');
 const rewindButton = document.getElementById('rewind-button');
 const playPauseButton = document.getElementById('play-pause-button');
 const fastForwardButton = document.getElementById('fast-forward-button');
+const toggleSettingsButton = document.getElementById('toggle-settings-button');
+const settingsPanel = document.getElementById('settings-panel');
+
+toggleSettingsButton.addEventListener('click', () => {
+    const isCollapsed = settingsPanel.classList.toggle('collapsed');
+    toggleSettingsButton.classList.toggle('collapsed', isCollapsed);
+    toggleSettingsButton.setAttribute('aria-expanded', !isCollapsed);
+});
 
 let refuges = [];
 let flyoverData;
@@ -109,7 +117,7 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
     const deltaLambda = toRadians(lon2 - lon1);
     const y = Math.sin(deltaLambda) * Math.cos(phi2);
     const x = Math.cos(phi1) * Math.sin(phi2) -
-              Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+        Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
     const bearing = toDegrees(Math.atan2(y, x));
     return (bearing + 360) % 360;
 }
@@ -118,12 +126,12 @@ function animate() {
     if (!isPlaying) return;
 
     const currentPoint = currentPath[currentFrame];
-    
+
     // Calculate next frame based on direction, handling wrap-around
     let nextFrameIndex = currentFrame + playbackDirection;
     if (nextFrameIndex >= currentPath.length) nextFrameIndex = 0;
     if (nextFrameIndex < 0) nextFrameIndex = currentPath.length - 1;
-    
+
     const nextPoint = currentPath[nextFrameIndex];
 
     marker.setLngLat([currentPoint.longitude, currentPoint.latitude]);
@@ -154,8 +162,8 @@ function animate() {
         if (t >= 1) {
             t = 1;
             currentFrame += playbackDirection;
-            
-             // Handle wrap-around
+
+            // Handle wrap-around
             if (currentFrame >= currentPath.length) {
                 currentFrame = 0;
             } else if (currentFrame < 0) {
@@ -163,7 +171,7 @@ function animate() {
             }
 
             // Trigger next segment
-            animate(); 
+            animate();
             return;
         }
 
@@ -174,7 +182,7 @@ function animate() {
         const currentBearing = startBearing + bearingDiff * t;
 
         marker.setLngLat([lng, lat]);
-        
+
         map.jumpTo({
             center: [lng, lat],
             altitude: alt,
@@ -256,7 +264,7 @@ progressBar.addEventListener('input', () => {
 pathSelector.addEventListener('change', () => {
     const selectedPath = pathSelector.value;
     loadPath(selectedPath);
-    
+
     // Update URL
     const url = new URL(window.location);
     url.searchParams.set('flyover', selectedPath);
@@ -276,11 +284,11 @@ function loadPath(pathName) {
     currentFrame = 0;
     animationSpeed = 4;
     stopAnimation();
-    
+
     if (currentPath && currentPath.length > 0) {
         const point = currentPath[0];
         marker.setLngLat([point.longitude, point.latitude]);
-        
+
         map.flyTo({
             center: [point.longitude, point.latitude],
             altitude: point.altitude,
@@ -288,7 +296,7 @@ function loadPath(pathName) {
             pitch: 50,
             bearing: 90,
         });
-        
+
         // Start animation after flying to the start
         map.once('moveend', startAnimation);
     }
@@ -307,7 +315,7 @@ async function loadRefuge(refuge, initialPath = null) {
 
     // Load data
     flyoverData = await loadFlyoverData(refuge.file);
-    
+
     // Populate path selector
     pathSelector.innerHTML = '';
     const pathNames = Object.keys(flyoverData);
@@ -323,7 +331,7 @@ async function loadRefuge(refuge, initialPath = null) {
     if (initialPath && pathNames.includes(initialPath)) {
         pathTimestampToLoad = initialPath;
     }
-    
+
     // Select path
     if (pathTimestampToLoad) {
         pathSelector.value = pathTimestampToLoad;
@@ -394,7 +402,7 @@ async function loadFacilities(cccode) {
 
 async function initialize() {
     refuges = await loadRefugesData();
-    
+
     // Populate refuge selector
     for (const refuge of refuges) {
         const option = document.createElement('option');
@@ -419,12 +427,12 @@ async function initialize() {
     const urlParams = new URLSearchParams(window.location.search);
     const refugeParam = urlParams.get('refuge');
     const flyoverParam = urlParams.get('flyover');
-    
+
     let initialRefuge;
     if (refugeParam) {
         initialRefuge = refuges.find(r => r.id === refugeParam);
     }
-    
+
     if (!initialRefuge && refuges.length > 0) {
         // Random refuge
         const randomIndex = Math.floor(Math.random() * refuges.length);

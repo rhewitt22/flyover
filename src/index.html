@@ -1,54 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Refuge Flyover</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div id="map"></div>
     <div id="controls">
-        <div class="select-wrapper">
-            <select id="refuge-selector" aria-label="Select National Wildlife Refuge"></select>
-        </div>
-        <div class="select-wrapper">
-            <select id="path-selector" aria-label="Select flyover path"></select>
-        </div>
-        <div class="select-wrapper">
-            <select id="style-selector" aria-label="Select map style">
-                <option value="mapbox://styles/mapbox/satellite-streets-v12" selected>Satellite Streets</option>
-                <option value="mapbox://styles/mapbox/satellite-v9">Satellite Only</option>
-                <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
-            </select>
-        </div>
-        
-        <div class="button-container">
-            <button id="rewind-button" title="Rewind" aria-label="Rewind flyover">
+        <header>
+            <h1>Refuge Flyover</h1>
+            <button id="toggle-settings-button" title="Settings" aria-label="Toggle settings">
                 <svg viewBox="0 0 24 24">
-                    <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
+                    <path
+                        d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
                 </svg>
             </button>
-            <button id="play-pause-button" title="Play/Pause" aria-label="Play flyover">
-                <svg class="play-icon" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                </svg>
-                <svg class="pause-icon" viewBox="0 0 24 24" style="display: none;">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                </svg>
-            </button>
-            <button id="fast-forward-button" title="Fast Forward" aria-label="Fast forward flyover">
-                <svg viewBox="0 0 24 24">
-                    <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
-                </svg>
-            </button>
+        </header>
+
+        <div id="settings-panel" class="control-group">
+            <div class="input-wrapper">
+                <label for="refuge-selector">Location</label>
+                <div class="select-container">
+                    <select id="refuge-selector"></select>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <label for="path-selector">Path</label>
+                <div class="select-container">
+                    <select id="path-selector"></select>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <label for="style-selector">Map Style</label>
+                <div class="select-container">
+                    <select id="style-selector">
+                        <option value="mapbox://styles/mapbox/satellite-streets-v12" selected>Satellite Streets</option>
+                        <option value="mapbox://styles/mapbox/satellite-v9">Satellite Only</option>
+                        <option value="mapbox://styles/mapbox/outdoors-v12">Outdoors</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
-        <div class="progress-container">
-            <input type="range" id="progress-bar" min="0" max="100" value="0" aria-label="Flyover progress">
+        <div class="control-group playback-group">
+            <div class="button-container">
+                <button id="rewind-button" title="Rewind" aria-label="Rewind">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z" />
+                    </svg>
+                </button>
+                <button id="play-pause-button" title="Play/Pause" aria-label="Play">
+                    <svg class="play-icon" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <svg class="pause-icon" viewBox="0 0 24 24" style="display: none;">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                    </svg>
+                </button>
+                <button id="fast-forward-button" title="Fast Forward" aria-label="Fast Forward">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="progress-wrapper">
+                <label for="progress-bar" class="sr-only">Flyover Progress</label>
+                <input type="range" id="progress-bar" min="0" max="100" value="0">
+            </div>
         </div>
     </div>
     <script src="config.js"></script>
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

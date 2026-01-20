@@ -1,0 +1,21 @@
+{
+  "name": "roy",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "live-server",
+    "build": "parcel build index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "parcel": "^2.16.3"
+  },
+  "dependencies": {
+    "axios": "^1.13.2"
+  }
+}

@@ -89,36 +89,71 @@ function animate() {
 
     marker.setLngLat([currentPoint.longitude, currentPoint.latitude]);
 
-    const bearing = calculateBearing(
+    const targetBearing = calculateBearing(
         currentPoint.latitude,
         currentPoint.longitude,
         nextPoint.latitude,
         nextPoint.longitude
     );
 
-    map.flyTo({
-        center: [currentPoint.longitude, currentPoint.latitude],
-        altitude: currentPoint.altitude,
-        bearing: bearing,
-        pitch: 50,
-        duration: 3000 / animationSpeed,
-        easing: (n) => n
-    });
+    const startBearing = map.getBearing();
+    let bearingDiff = targetBearing - startBearing;
 
-    progressBar.value = (currentFrame / currentPath.length) * 100;
+    // Normalize the difference to find the shortest rotation path
+    if (bearingDiff > 180) bearingDiff -= 360;
+    if (bearingDiff < -180) bearingDiff += 360;
+
+    const startTime = performance.now();
+    const duration = 3000 / animationSpeed;
+
+    function frame(currentTime) {
+        if (!isPlaying) return;
+
+        const elapsed = currentTime - startTime;
+        let t = elapsed / duration;
+
+        if (t >= 1) {
+            t = 1;
+            currentFrame += playbackDirection;
+            
+             // Handle wrap-around
+            if (currentFrame >= currentPath.length) {
+                currentFrame = 0;
+            } else if (currentFrame < 0) {
+                currentFrame = currentPath.length - 1;
+            }
+
+            // Trigger next segment
+            animate(); 
+            return;
+        }
+
+        // Linear Interpolation (Lerp)
+        const lng = currentPoint.longitude + (nextPoint.longitude - currentPoint.longitude) * t;
+        const lat = currentPoint.latitude + (nextPoint.latitude - currentPoint.latitude) * t;
+        const alt = currentPoint.altitude + (nextPoint.altitude - currentPoint.altitude) * t;
+        const currentBearing = startBearing + bearingDiff * t;
+
+        marker.setLngLat([lng, lat]);
+        
+        map.jumpTo({
+            center: [lng, lat],
+            altitude: alt,
+            bearing: currentBearing,
+            pitch: 50
+        });
+
+        progressBar.value = ((currentFrame + t * playbackDirection) / currentPath.length) * 100;
+
+        requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
 }
 
-map.on('moveend', () => {
-    if (isPlaying) {
-        currentFrame += playbackDirection;
-        if (currentFrame >= currentPath.length) {
-            currentFrame = 0;
-        } else if (currentFrame < 0) {
-            currentFrame = currentPath.length - 1;
-        }
-        animate();
-    }
-});
+// Remove the old moveend listener as it conflicts with the new loop
+// map.on('moveend', ...); 
+
 
 function startAnimation() {
     if (isPlaying || !currentPath) return;
@@ -256,7 +291,15 @@ async function initialize() {
         refugeSelector.appendChild(option);
     }
 
-    marker = new mapboxgl.Marker()
+    const el = document.createElement('div');
+    el.className = 'eagle-marker';
+    el.innerText = '🦅';
+
+    marker = new mapboxgl.Marker({
+        element: el,
+        rotationAlignment: 'viewport',
+        pitchAlignment: 'viewport'
+    })
         .setLngLat([0, 0])
         .addTo(map);
 

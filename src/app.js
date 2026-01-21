@@ -44,6 +44,11 @@ const map = new mapboxgl.Map({
     zoom: 3
 });
 
+// Add zoom and rotation controls to the map.
+map.addControl(new mapboxgl.NavigationControl({
+    visualizePitch: true
+}), 'top-right');
+
 const refugeSelector = document.getElementById('refuge-selector');
 const pathSelector = document.getElementById('path-selector');
 const styleSelector = document.getElementById('style-selector');
